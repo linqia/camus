@@ -49,6 +49,7 @@ public class EtlMultiOutputFormat extends FileOutputFormat<EtlKey, Object> {
     public static final String ETL_RUN_TRACKING_POST = "etl.run.tracking.post";
 
     public static final String ETL_DEFAULT_TIMEZONE = "etl.default.timezone";
+    public static final String ETL_OUTPUT_PATH_GRANULARITY = "etl.output.path.granularity";
     public static final String ETL_DEFLATE_LEVEL = "etl.deflate.level";
     public static final String ETL_AVRO_WRITER_SYNC_INTERVAL = "etl.avro.writer.sync.interval";
     public static final String ETL_OUTPUT_FILE_TIME_PARTITION_MINS = "etl.output.file.time.partition.mins";
@@ -121,6 +122,10 @@ public class EtlMultiOutputFormat extends FileOutputFormat<EtlKey, Object> {
 
     public static String getDefaultTimeZone(JobContext job) {
         return job.getConfiguration().get(ETL_DEFAULT_TIMEZONE, "America/Los_Angeles");
+    }
+
+    public static String getOutputPathGranularity(JobContext job) {
+        return job.getConfiguration().get(ETL_OUTPUT_PATH_GRANULARITY, "hourly");
     }
 
     public static void setDestinationPath(JobContext job, Path dest) {

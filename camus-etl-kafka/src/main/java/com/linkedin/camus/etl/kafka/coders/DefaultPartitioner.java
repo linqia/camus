@@ -5,13 +5,28 @@ import com.linkedin.camus.etl.IEtlKey;
 import com.linkedin.camus.etl.kafka.common.DateUtils;
 import com.linkedin.camus.etl.kafka.mapred.EtlMultiOutputFormat;
 import org.apache.hadoop.mapreduce.JobContext;
+import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormatter;
 
 public class DefaultPartitioner implements Partitioner {
-    protected static final String OUTPUT_DATE_FORMAT = "YYYY/MM/dd/HH";
+    private static Logger log = Logger.getLogger(EtlMultiOutputFormat.class);
     protected DateTimeFormatter outputDateFormatter = null;
+
+    private String getOutputFormat(JobContext context) {
+        String granularity = EtlMultiOutputFormat.getOutputPathGranularity(context).toLowerCase();
+        if (granularity.equals("hourly")) {
+            return "YYYY/MM/dd/HH";
+        } else if (granularity.equals("daily")) {
+            return "YYYY/MM/dd";
+        }else if (granularity.equals("monthly")) {
+            return "YYYY/MM";
+        } else {
+            log.info("Unknown granularity for " + EtlMultiOutputFormat.ETL_OUTPUT_PATH_GRANULARITY + ": " + granularity);
+            return "YYYY/MM/dd/HH";
+        }
+    }
 
     @Override
     public String encodePartition(JobContext context, IEtlKey key) {
@@ -24,7 +39,7 @@ public class DefaultPartitioner implements Partitioner {
         // We only need to initialize outputDateFormatter with the default timeZone once.
         if (outputDateFormatter == null) {
             outputDateFormatter = DateUtils.getDateTimeFormatter(
-                OUTPUT_DATE_FORMAT,
+                getOutputFormat(context),
                 DateTimeZone.forID(EtlMultiOutputFormat.getDefaultTimeZone(context))
             );
         }
