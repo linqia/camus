@@ -13,6 +13,7 @@ import com.linkedin.camus.coders.MessageDecoder;
 import com.linkedin.camus.coders.MessageDecoderException;
 
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 
 
 /**
@@ -33,6 +34,7 @@ public class JsonStringMessageDecoder extends MessageDecoder<byte[], String> {
 	// Property for the JSON field name of the timestamp.
 	public  static final String CAMUS_MESSAGE_TIMESTAMP_FIELD  = "camus.message.timestamp.field";
 	public  static final String DEFAULT_TIMESTAMP_FIELD        = "timestamp";
+	public  static final String ISO_8601_TIMESTAMP_FORMAT      = "ISO-8601";
 
 	private String timestampFormat;
 	private String timestampField;
@@ -65,10 +67,18 @@ public class JsonStringMessageDecoder extends MessageDecoder<byte[], String> {
 		// Attempt to read and parse the timestamp element into a long.
 		if (jsonObject.has(timestampField)) {
 			String timestampString = jsonObject.get(timestampField).getAsString();
-			try {
-				timestamp = new SimpleDateFormat(timestampFormat).parse(timestampString).getTime();
-			} catch (Exception e) {
-				log.error("Could not parse timestamp '" + timestampString + "' while decoding JSON message.");
+			if (ISO_8601_TIMESTAMP_FORMAT.equals(timestampFormat)) {
+				try {
+					timestamp = new DateTime(timestampString).getMillis();
+				} catch (IllegalArgumentException e) {
+					log.error("Could not parse timestamp '" + timestampString + "' as ISO-8601 while decoding JSON message.");
+				}
+			} else {
+				try {
+					timestamp = new SimpleDateFormat(timestampFormat).parse(timestampString).getTime();
+				} catch (Exception e) {
+					log.error("Could not parse timestamp '" + timestampString + "' while decoding JSON message.");
+				}
 			}
 		}
 
